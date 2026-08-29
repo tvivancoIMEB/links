@@ -9,11 +9,12 @@ const website = new Hono<{ Bindings: Bindings }>();
 
 website.get('/', async (ctx) => {
   const { cf } = ctx.req.raw;
+  const origin = new URL(ctx.req.url).origin;
   const data = [
     {
       key: 'github',
       url: 'https://github.com/vickyrathee/idm',
-      short_url: `https://idm.in/github`,
+      short_url: `${origin}/github`,
       params: {
         url_medium: 'search',
         utm_campaign: 'website',
@@ -35,34 +36,19 @@ website.get('/', async (ctx) => {
   return ctx.html(Home(props));
 });
 
-website.get('/', async (ctx) => {
-    const { cf } = ctx.req.raw;
+website.get('/:id', async (ctx) => {
+  const key = ctx.req.param('id');
+  const link: ShortLink = await ctx.env.SHORTLINKS.get(key, {
+    type: 'json',
+  });
+
+  if (link && link.url) {
+    const url = appendParamsToURL(link.url, link.params);
+    return ctx.redirect(url, 302);
+  } else {
     const origin = new URL(ctx.req.url).origin;
-    const data = [
-      {
-        key: 'github',
-        url: 'https://github.com/vickyrathee/idm',
-        short_url: `${origin}/github`,
-        params: {
-          url_medium: 'search',
-          utm_campaign: 'website',
-        },
-        created_at: new Date(),
-      },
-    ];
-    ...
+    return ctx.redirect(origin, 302);
+  }
+});
 
-  Y en el redirect por defecto cuando no existe el key:
-  website.get('/:id', async (ctx) => {
-    const key = ctx.req.param('id');
-    const link: ShortLink = await ctx.env.SHORTLINKS.get(key, {
-      type: 'json',
-    });
-
-    if (link && link.url) {
-      const url = appendParamsToURL(link.url, link.params);
-      return ctx.redirect(url, 302);
-    } else {
-      const origin = new URL(ctx.req.url).origin;
-      return ctx.redirect(origin, 302);
-    }
+export { website };
