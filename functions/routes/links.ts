@@ -40,11 +40,12 @@ links.post(
       key = nanoid(7);
       exists = await ctx.env.SHORTLINKS.get(key);
     }
-    await ctx.env.SHORTLINKS.put(key, JSON.stringify(data), {
+     await ctx.env.SHORTLINKS.put(key, JSON.stringify(data), {
       expiration: expireAt,
     });
+    const origin = new URL(ctx.req.url).origin;
     return ctx.json(
-      { ...data, key: key, short_url: `https://idm.in/${key}` },
+      { ...data, key: key, short_url: `${origin}/${key}` },
       200
     );
   }
@@ -79,11 +80,12 @@ links.put(
     const expireAt = data.expire_at
       ? dayjs(data.expire_at).unix()
       : dayjs().add(1, 'month').unix();
-    await ctx.env.SHORTLINKS.put(key, JSON.stringify(data), {
+       await ctx.env.SHORTLINKS.put(key, JSON.stringify(data), {
       expiration: expireAt,
     });
+    const origin = new URL(ctx.req.url).origin;
     return ctx.json(
-      { ...data, key: key, short_url: `https://idm.in/${key}` },
+      { ...data, key: key, short_url: `${origin}/${key}` },
       200
     );
   }
